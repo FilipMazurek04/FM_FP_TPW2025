@@ -19,7 +19,10 @@ namespace TP.ConcurrentProgramming.Data
 
         public DataImplementation()
         {
-            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(100));
+            // (1000ms / 60fps) = 16.7ms
+            const int frameRateMs = 17;
+            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(frameRateMs));
+            _moveScaleFactor = frameRateMs / 100.0;
         }
 
         #endregion ctor
@@ -79,10 +82,12 @@ namespace TP.ConcurrentProgramming.Data
         private Random RandomGenerator = new();
         private List<Ball> BallsList = [];
 
+        private readonly double _moveScaleFactor;
+
         private void Move(object? x)
         {
             foreach (Ball item in BallsList)
-                item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 10, (RandomGenerator.NextDouble() - 0.5) * 10));
+                item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 7, (RandomGenerator.NextDouble() - 0.5) * 7));
         }
 
         #endregion private

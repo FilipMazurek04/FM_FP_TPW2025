@@ -52,31 +52,33 @@ namespace TP.ConcurrentProgramming.BusinessLogic
             double newPosX = posX;
             double newPosY = posY;
 
-            // Kolizja z lewą i prawą ścianą
+            // Kolizja z lewą ścianą
             if (posX <= 0)
             {
-                newVelocityX = -velocity.x;
-                newPosX = _tableWidth - _ballDiameter;
+                newVelocityX = -velocity.x;  // Odbijamy prędkość w osi X
+                newPosX = 0;  // Ustawiamy tuż przy lewej ścianie
                 touchedWall = true;
             }
-            else if (posY + _ballDiameter >= _tableHeight)
+            // Kolizja z prawą ścianą
+            else if (posX + _ballDiameter >= _tableWidth)  // Poprawiony warunek
             {
-                newVelocityX = -velocity.x;
-                newPosX = _tableWidth - _ballDiameter;
+                newVelocityX = -velocity.x;  // Odbijamy prędkość w osi X
+                newPosX = _tableWidth - _ballDiameter;  // Ustawiamy tuż przy prawej ścianie
                 touchedWall = true;
             }
 
-            // Kolizja z górną i dolną ścianą
+            // Kolizja z górną ścianą
             if (posY <= 0)
             {
-                newVelocityY = -velocity.y;
-                newPosY = _tableHeight - _ballDiameter;
+                newVelocityY = -velocity.y;  // Odbijamy prędkość w osi Y
+                newPosY = 0;  // Ustawiamy tuż przy górnej ścianie
                 touchedWall = true;
             }
+            // Kolizja z dolną ścianą
             else if (posY + _ballDiameter >= _tableHeight)
             {
-                newVelocityY = -velocity.y;
-                newPosY = _tableHeight - _ballDiameter;
+                newVelocityY = -velocity.y;  // Odbijamy prędkość w osi Y
+                newPosY = _tableHeight - _ballDiameter;  // Ustawiamy tuż przy dolnej ścianie
                 touchedWall = true;
             }
 
