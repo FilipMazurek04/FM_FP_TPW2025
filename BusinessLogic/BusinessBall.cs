@@ -12,14 +12,8 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class Ball : IBall
     {
-        private readonly Data.IBall _ball;
-        private static readonly double _ballDiameter = BusinessLogicAbstractAPI.GetDimensions.BallDimension;
-        private static readonly double _tableWidth = BusinessLogicAbstractAPI.GetDimensions.TableWidth;
-        private static readonly double _tableHeight = BusinessLogicAbstractAPI.GetDimensions.TableHeight;
-
         public Ball(Data.IBall ball)
         {
-            _ball = ball;
             ball.NewPositionNotification += RaisePositionChangeEvent;
         }
 
@@ -31,48 +25,82 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 
         #region private
 
-        private void RaisePositionChangeEvent(object? sender, Data.IVector e)
+        private void RaisePositionChangeEvent(object? sender, Data.IVector pos)
         {
+            Data.IBall dataBall = (Data.IBall)sender!;
+
             // Ograniczamy współrzędne, żeby nie wyszły poza stół
-            double constrainedX = ConstrainPosition(e.x, _ballDiameter, _tableWidth);
-            double constrainedY = ConstrainPosition(e.y, _ballDiameter, _tableHeight);
-
-            // Odwracamy prędkość piłki jeśli uderzy w stół
-            if (constrainedX != e.x || constrainedY != e.y)
-            {
-                Data.IVector currentVelocity = _ball.Velocity;
-
-                if (constrainedX != e.x)
-                {
-                    _ball.Velocity = Data.DataAbstractAPI.GetDataLayer().CreateVector(-currentVelocity.x, currentVelocity.y);
-                }
-
-                if (constrainedY != e.y)
-                {
-                    _ball.Velocity = Data.DataAbstractAPI.GetDataLayer().CreateVector(currentVelocity.x, -currentVelocity.y);
-                }
-            }
-
-            NewPositionNotification?.Invoke(this, new Position(constrainedX, constrainedY));
+            ConstrainPosition(dataBall, pos);
+            NewPositionNotification?.Invoke(this, new Position(pos.x, pos.y));
         }
 
-        private static double ConstrainPosition(double position, double ballSize, double tableSize)
+        private void ConstrainPosition(Data.IBall ball, Data.IVector pos)
         {
-            double radius = ballSize / 2.0;
-            double min = radius;
-            double max = tableSize - radius;
+            // Wymiary stołu i kulki z API warstwy logiki biznesowej
+            double _ballDiameter = BusinessLogicAbstractAPI.GetDimensions.BallDimension;
+            double _tableWidth = BusinessLogicAbstractAPI.GetDimensions.TableWidth;
+            double _tableHeight = BusinessLogicAbstractAPI.GetDimensions.TableHeight;
 
-            if (position < min)
+            // Aktualna pozycja i prędkość kulki
+            double posX = pos.x;
+            double posY = pos.y;
+            Data.IVector velocity = ((Data.IBall)ball).Velocity;
+
+            bool touchedWall = false;
+            double newVelocityX = velocity.x;
+            double newVelocityY = velocity.y;
+            double newPosX = posX;
+            double newPosY = posY;
+
+            // Kolizja z lewą i prawą ścianą
+            if (posX <= 0)
             {
-                return min;
+                newVelocityX = -velocity.x;
+                newPosX = _tableWidth - _ballDiameter;
+                touchedWall = true;
             }
-            if (position > max)
+            else if (posY + _ballDiameter >= _tableHeight)
             {
-                return max;
+                newVelocityX = -velocity.x;
+                newPosX = _tableWidth - _ballDiameter;
+                touchedWall = true;
             }
-            return position;
+
+            // Kolizja z górną i dolną ścianą
+            if (posY <= 0)
+            {
+                newVelocityY = -velocity.y;
+                newPosY = _tableHeight - _ballDiameter;
+                touchedWall = true;
+            }
+            else if (posY + _ballDiameter >= _tableHeight)
+            {
+                newVelocityY = -velocity.y;
+                newPosY = _tableHeight - _ballDiameter;
+                touchedWall = true;
+            }
+
+            // Jeśli kulka dotknęła ściany, zmieniamy prędkość używając interfejsu abstrakcyjnego
+            if (touchedWall)
+            {
+                ((Data.IBall)ball).Velocity = new BusinessVector(newVelocityX, newVelocityY);
+                ((Data.IBall)ball).SetPosition(new BusinessVector(newPosX, newPosY));
+                touchedWall = false;
+            }
         }
 
-        #endregion private
+        private class BusinessVector : Data.IVector
+        {
+            public double x { get; init; }
+            public double y { get; init; }
+
+            public BusinessVector(double xNew, double yNew)
+            {
+                x = xNew;
+                y = yNew;
+            }
+        }
+
     }
+        #endregion private
 }

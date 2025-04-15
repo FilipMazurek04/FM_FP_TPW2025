@@ -25,9 +25,6 @@ namespace TP.ConcurrentProgramming.Data
 
         public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
 
-        // Fabryka wektorów
-        public abstract IVector CreateVector(double x, double y);
-
         #endregion public API
 
         #region IDisposable
@@ -61,5 +58,13 @@ namespace TP.ConcurrentProgramming.Data
         event EventHandler<IVector> NewPositionNotification;
 
         IVector Velocity { get; set; }
+
+
+        /// <summary>
+        ///  Ustawia pozycję kulki
+        /// </summary>
+        /// <param name="position">Nowa pozycja kulki</param>
+
+        void SetPosition(IVector position);
     }
 }

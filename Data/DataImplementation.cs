@@ -35,16 +35,11 @@ namespace TP.ConcurrentProgramming.Data
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
-                Vector startingPosition = new(random.Next(100, 400 - 100), random.Next(100, 400 - 100));
+                Vector startingPosition = new(random.Next(0, 390), random.Next(0, 390));
                 Ball newBall = new(startingPosition, startingPosition);
                 upperLayerHandler(startingPosition, newBall);
                 BallsList.Add(newBall);
             }
-        }
-
-        public override IVector CreateVector(double x, double y)
-        {
-            return new Vector(x, y);
         }
 
         #endregion DataAbstractAPI
