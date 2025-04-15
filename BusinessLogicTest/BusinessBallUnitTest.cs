@@ -24,21 +24,49 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
       Assert.AreEqual<int>(1, numberOfCallBackCalled);
     }
 
-    #region testing instrumentation
+        #region testing instrumentation
 
-    private class DataBallFixture : Data.IBall
-    {
-      public Data.IVector Velocity { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        private class DataBallFixture : Data.IBall
+        {
+            // Implementuj właściwość Velocity, aby nie rzucała wyjątku
+            private Data.IVector _velocity = new VectorFixture(5.0, 3.0); // Domyślna prędkość
 
-      public event EventHandler<Data.IVector>? NewPositionNotification;
+            public Data.IVector Velocity
+            {
+                get => _velocity;
+                set => _velocity = value;
+            }
 
-      internal void Move()
-      {
-        NewPositionNotification?.Invoke(this, new VectorFixture(0.0, 0.0));
-      }
-    }
+            public event EventHandler<Data.IVector>? NewPositionNotification;
 
-    private class VectorFixture : Data.IVector
+            // Dodanie brakującej implementacji metody SetPosition
+            public void SetPosition(Data.IVector position)
+            {
+                // Przy wywołaniu tej metody generujemy zdarzenie NewPositionNotification
+                NewPositionNotification?.Invoke(this, position);
+            }
+
+            internal void Move()
+            {
+                // Symulacja rzeczywistego ruchu kulki
+                double currentX = 150.0; // Przykładowa początkowa pozycja X
+                double currentY = 200.0; // Przykładowa początkowa pozycja Y
+
+                // Wykorzystaj właściwość Velocity zamiast sztywno zakodowanych wartości
+                double velocityX = Velocity.x;
+                double velocityY = Velocity.y;
+
+                // Obliczenie nowej pozycji
+                double newX = currentX + velocityX;
+                double newY = currentY + velocityY;
+
+                // Wywołanie zdarzenia z nową pozycją
+                NewPositionNotification?.Invoke(this, new VectorFixture(newX, newY));
+            }
+        }
+
+
+        private class VectorFixture : Data.IVector
     {
       internal VectorFixture(double X, double Y)
       {
