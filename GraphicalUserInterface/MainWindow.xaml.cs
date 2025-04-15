@@ -36,6 +36,23 @@ namespace TP.ConcurrentProgramming.PresentationView
             MainWindowViewModel viewModel = (MainWindowViewModel)DataContext;
             double screenWidth = SystemParameters.PrimaryScreenWidth;
             double screenHeight = SystemParameters.PrimaryScreenHeight;
+
+            // Dodanie obsługi zdarzenia zmiany rozmiaru okna
+            this.SizeChanged += MainWindow_SizeChanged;
+
+            // Wywołanie UpdateScale na starcie, aby ustawić początkowe wymiary
+            if (viewModel != null)
+            {
+                viewModel.UpdateScale(this.ActualWidth, this.ActualHeight);
+            }
+        }
+
+        private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel && IsLoaded)
+            {
+                viewModel.UpdateScale(e.NewSize.Width, e.NewSize.Height);
+            }
         }
 
         /// <summary>

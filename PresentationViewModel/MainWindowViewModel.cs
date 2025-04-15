@@ -31,11 +31,6 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             UpdateGameAreaDimensions();
 
             Observer = ModelLayer.Subscribe<ModelIBall>(x => Balls.Add(x));
-
-            //// Inicjalizacja komend
-            //IncreaseBallCountCommand = new RelayCommand(IncreaseBallCount, () => (BallCount < maxBalls && !isRunning));
-            //DecreaseBallCountCommand = new RelayCommand(DecreaseBallCount, () => (BallCount > 1 && !isRunning));
-            //StartCommand = new RelayCommand(() => Start(BallCount), () => !isRunning);
         }
 
         #endregion ctor
@@ -85,31 +80,47 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
             double scale = ModelLayer.ScaleFactor;
             GameAreaSize = LogicalGameAreaSize * scale;
 
-            // Canvas ma rozmiar obszaru gry plus marginesy
+            // Canvas = rozmiar obszaru gry + marginesy
             CanvasSize = GameAreaSize + (BorderThickness * 2);
 
             // Ustawienie wymiarów okna
-            WindowWidth = CanvasSize + 70;
-            WindowHeight = CanvasSize + 100;
+            //WindowWidth = CanvasSize + 70;
+            //WindowHeight = CanvasSize + 100;
         }
 
-        //public int BallCount
-        //{
-        //    get => _ballCount;
-        //    set
-        //    {
-        //        if (_ballCount != value)
-        //        {
-        //            _ballCount = value;
-        //            RaisePropertyChanged(nameof(BallCount));
-        //            RaisePropertyChanged();
-        //        }
-        //    }
-        //}
+        // Metoda wywoływana gdy zmienia się rozmiar okna
+        public void UpdateScale(double newWindowWidth, double newWindowHeight)
+        {
+            // Obliczenie dostępnej przestrzeni po uwzględnieniu marginesów
+            double availableWidth = newWindowWidth - 100;  // Margines poziomy
+            double availableHeight = newWindowHeight - 150; // Margines pionowy (większy dla panelu kontrolnego)
 
-        //public ICommand IncreaseBallCountCommand { get; }
-        //public ICommand DecreaseBallCountCommand { get; }
-        //public ICommand StartCommand { get; }
+            // Wybieramy mniejszy wymiar, aby zachować proporcje
+            double availableSize = Math.Min(availableWidth, availableHeight);
+
+            // Obliczamy nowy współczynnik skali tak, by obszar gry pasował do dostępnej przestrzeni
+            double newScale = Math.Max(0.5, availableSize / (LogicalGameAreaSize + 2 * BorderThickness));
+
+            // Ustawiamy nowy współczynnik skali, co zaktualizuje GameAreaSize i CanvasSize
+            if (ModelLayer.ScaleFactor != newScale)
+            {
+                ModelLayer.ScaleFactor = newScale;
+                UpdateGameAreaDimensions();
+            }
+        }
+
+        public double ScaleFactor
+        {
+            get => ModelLayer.ScaleFactor;
+            private set
+            {
+                if (ModelLayer.ScaleFactor != value && value > 0)
+                {
+                    ModelLayer.ScaleFactor = value;
+                    RaisePropertyChanged();
+                }
+            }
+        }
 
         public double WindowWidth
         {
@@ -136,29 +147,6 @@ namespace TP.ConcurrentProgramming.Presentation.ViewModel
                 }
             }
         }
-
-
-        //private int maxBalls = 20;
-        //private bool isRunning = false; // Flaga do sprawdzania, czy model jest uruchomiony
-
-        //private void IncreaseBallCount()
-        //{
-        //    if (BallCount < maxBalls) // Maksymalna liczba kul
-        //        BallCount++;
-        //}
-
-        //private void DecreaseBallCount()
-        //{
-        //    if (BallCount > 1) // Minimalna liczba kul to 1
-        //        BallCount--;
-        //}
-
-        //private void RaiseCanExecuteChanged()
-        //{
-        //    (IncreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        //    (DecreaseBallCountCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        //    (StartCommand as RelayCommand)?.RaiseCanExecuteChanged();
-        //}
 
         public void Start(int numberOfBalls)
         {
