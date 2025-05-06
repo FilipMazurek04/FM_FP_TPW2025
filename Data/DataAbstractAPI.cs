@@ -8,6 +8,8 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Numerics;
+
 namespace TP.ConcurrentProgramming.Data
 {
     public abstract class DataAbstractAPI : IDisposable
@@ -23,7 +25,12 @@ namespace TP.ConcurrentProgramming.Data
 
         #region public API
 
-        public abstract void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler);
+        public abstract int getWidth();
+        public abstract int getHeight();
+
+        public abstract List<IBall> getAllBalls();
+
+        public abstract void Start(int numberOfBalls, Action<Vector2, IBall> upperLayerHandler);
 
         #endregion public API
 
@@ -40,31 +47,14 @@ namespace TP.ConcurrentProgramming.Data
         #endregion private
     }
 
-    public interface IVector
-    {
-        /// <summary>
-        /// The X component of the vector.
-        /// </summary>
-        double x { get; init; }
-
-        /// <summary>
-        /// The y component of the vector.
-        /// </summary>
-        double y { get; init; }
-    }
-
     public interface IBall
     {
-        event EventHandler<IVector> NewPositionNotification;
+        event EventHandler<Vector2> NewPositionNotification;
 
-        IVector Velocity { get; set; }
-
-
-        /// <summary>
-        ///  Ustawia pozycję kulki
-        /// </summary>
-        /// <param name="position">Nowa pozycja kulki</param>
-
-        void SetPosition(IVector position);
+        Vector2 Position { get; }
+        Vector2 Velocity { get; set; }
+        bool IsMoving { get; set; }
+        int Radius { get; }
+        void StartThread();
     }
 }

@@ -7,76 +7,71 @@
 //  https://github.com/mpostol/TP/discussions/182
 //
 //_____________________________________________________________________________________________________________________________________
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
+using System.Numerics;
 
 namespace TP.ConcurrentProgramming.BusinessLogic.Test
 {
-  [TestClass]
-  public class BallUnitTest
-  {
-    [TestMethod]
-    public void MoveTestMethod()
+    [TestClass]
+    public class BallUnitTest
     {
-      DataBallFixture dataBallFixture = new DataBallFixture();
-      Ball newInstance = new(dataBallFixture);
-      int numberOfCallBackCalled = 0;
-      newInstance.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); Assert.IsNotNull(position); numberOfCallBackCalled++; };
-      dataBallFixture.Move();
-      Assert.AreEqual<int>(1, numberOfCallBackCalled);
-    }
+        [TestMethod]
+        public void MoveTestMethod()
+        {
+            DataBallFixture dataBallFixture = new DataBallFixture();
+            Ball newInstance = new(dataBallFixture);
+            int numberOfCallBackCalled = 0;
+            newInstance.NewPositionNotification += (sender, position) => { Assert.IsNotNull(sender); Assert.IsNotNull(position); numberOfCallBackCalled++; };
+            dataBallFixture.Move();
+            Assert.AreEqual<int>(1, numberOfCallBackCalled);
+        }
 
         #region testing instrumentation
 
         private class DataBallFixture : Data.IBall
         {
-            // Implementuj właściwość Velocity, aby nie rzucała wyjątku
-            private Data.IVector _velocity = new VectorFixture(5.0, 3.0); // Domyślna prędkość
+            private Vector2 _position = new Vector2(100.0f, 150.0f);
+            private Vector2 _velocity = new Vector2(5.0f, 3.0f);
 
-            public Data.IVector Velocity
+            public Vector2 Position => _position;
+            public Vector2 Velocity
             {
                 get => _velocity;
                 set => _velocity = value;
             }
+            public bool IsMoving { get; set; } = true;
+            public int Radius => 10;
 
-            public event EventHandler<Data.IVector>? NewPositionNotification;
+            public event EventHandler<Vector2>? NewPositionNotification;
 
-            // Dodanie brakującej implementacji metody SetPosition
-            public void SetPosition(Data.IVector position)
-            {
-                // Przy wywołaniu tej metody generujemy zdarzenie NewPositionNotification
-                NewPositionNotification?.Invoke(this, position);
-            }
+            public void StartThread() { }
 
             internal void Move()
             {
                 // Symulacja rzeczywistego ruchu kulki
-                double currentX = 150.0; // Przykładowa początkowa pozycja X
-                double currentY = 200.0; // Przykładowa początkowa pozycja Y
-
-                // Wykorzystaj właściwość Velocity zamiast sztywno zakodowanych wartości
-                double velocityX = Velocity.x;
-                double velocityY = Velocity.y;
+                float velocityX = Velocity.X;
+                float velocityY = Velocity.Y;
 
                 // Obliczenie nowej pozycji
-                double newX = currentX + velocityX;
-                double newY = currentY + velocityY;
+                float newX = Position.X + velocityX;
+                float newY = Position.Y + velocityY;
+
+                // Aktualizacja pozycji
+                _position = new Vector2(newX, newY);
 
                 // Wywołanie zdarzenia z nową pozycją
-                NewPositionNotification?.Invoke(this, new VectorFixture(newX, newY));
+                NewPositionNotification?.Invoke(this, _position);
+            }
+
+            // Metoda do ustawiania pozycji z zewnątrz
+            public void SetPosition(Vector2 position)
+            {
+                _position = position;
+                NewPositionNotification?.Invoke(this, position);
             }
         }
 
-
-        private class VectorFixture : Data.IVector
-    {
-      internal VectorFixture(double X, double Y)
-      {
-        x = X; y = Y;
-      }
-
-      public double x { get; init; }
-      public double y { get; init; }
+        #endregion testing instrumentation
     }
-
-    #endregion testing instrumentation
-  }
 }

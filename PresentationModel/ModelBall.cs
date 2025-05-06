@@ -98,9 +98,11 @@ namespace TP.ConcurrentProgramming.Presentation.Model
             _originalTop = e.y;
             _originalLeft = e.x;
 
-            // Ustawienie skalowanych wartości
-            Top = _originalTop * _scaleFactor;
-            Left = _originalLeft * _scaleFactor;
+            double radiusScaled = Diameter / 2; // promień w skali warstwy prezentacji
+
+            // Ustawienie skalowanych wartości z korektą pozycji na lewy górny róg
+            Top = (_originalTop * _scaleFactor) - radiusScaled;
+            Left = (_originalLeft * _scaleFactor) - radiusScaled;
         }
 
         private void RaisePropertyChanged([CallerMemberName] string propertyName = "")

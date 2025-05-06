@@ -8,8 +8,8 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
-using System;
 using System.Diagnostics;
+using System.Numerics;
 
 namespace TP.ConcurrentProgramming.Data
 {
@@ -17,19 +17,38 @@ namespace TP.ConcurrentProgramming.Data
     {
         #region ctor
 
+        private bool Disposed = false;
+        // Pozostawiamy wymiary stołu, ale możemy je dostosować jeśli potrzeba
+        private readonly int width = 400;
+        private readonly int height = 400;
+        private List<IBall> BallsList = [];
+
         public DataImplementation()
         {
             // (1000ms / 60fps) = 16.7ms
-            const int frameRateMs = 17;
-            MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(frameRateMs));
-            _moveScaleFactor = frameRateMs / 100.0;
+            //const int frameRateMs = 17;
+            //MoveTimer = new Timer(Move, null, TimeSpan.Zero, TimeSpan.FromMilliseconds(frameRateMs));
+            //_moveScaleFactor = frameRateMs / 100.0;
         }
+        public override int getWidth()
+        {
+            return width;
+        }
+        public override int getHeight()
+        {
+            return height;
+        }
+        public override List<IBall> getAllBalls()
+        {
+            return BallsList;
+        }
+
 
         #endregion ctor
 
         #region DataAbstractAPI
 
-        public override void Start(int numberOfBalls, Action<IVector, IBall> upperLayerHandler)
+        public override void Start(int numberOfBalls, Action<Vector2, IBall> upperLayerHandler)
         {
             if (Disposed)
                 throw new ObjectDisposedException(nameof(DataImplementation));
@@ -38,10 +57,13 @@ namespace TP.ConcurrentProgramming.Data
             Random random = new Random();
             for (int i = 0; i < numberOfBalls; i++)
             {
-                Vector startingPosition = new(random.Next(0, 390), random.Next(0, 390));
-                Ball newBall = new(startingPosition, startingPosition);
+                Vector2 startingPosition = new(random.Next(10, width - 10), random.Next(10, height - 10));
+                Ball newBall = new(startingPosition);
                 upperLayerHandler(startingPosition, newBall);
                 BallsList.Add(newBall);
+
+                // Uruchamiamy wątek kulki - to kluczowa linia!
+                newBall.StartThread();
             }
         }
 
@@ -55,7 +77,15 @@ namespace TP.ConcurrentProgramming.Data
             {
                 if (disposing)
                 {
-                    MoveTimer.Dispose();
+                    // Zatrzymaj wszystkie kulki przed wyczyszczeniem listy
+                    foreach (var ball in BallsList)
+                    {
+                        ball.IsMoving = false;
+                    }
+
+                    // Daj czas na zakończenie wątków
+                    Thread.Sleep(100);
+
                     BallsList.Clear();
                 }
                 Disposed = true;
@@ -74,21 +104,6 @@ namespace TP.ConcurrentProgramming.Data
         #endregion IDisposable
 
         #region private
-
-        //private bool disposedValue;
-        private bool Disposed = false;
-
-        private readonly Timer MoveTimer;
-        private Random RandomGenerator = new();
-        private List<Ball> BallsList = [];
-
-        private readonly double _moveScaleFactor;
-
-        private void Move(object? x)
-        {
-            foreach (Ball item in BallsList)
-                item.Move(new Vector((RandomGenerator.NextDouble() - 0.5) * 7, (RandomGenerator.NextDouble() - 0.5) * 7));
-        }
 
         #endregion private
 
