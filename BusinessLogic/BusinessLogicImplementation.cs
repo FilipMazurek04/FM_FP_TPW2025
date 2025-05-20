@@ -16,6 +16,10 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 {
     internal class BusinessLogicImplementation : BusinessLogicAbstractAPI
     {
+        private readonly object _collisionLock = new object();
+        private bool Disposed = false;
+        private readonly UnderneathLayerAPI layerBellow;
+
         #region ctor
 
         public BusinessLogicImplementation() : this(null)
@@ -43,55 +47,45 @@ namespace TP.ConcurrentProgramming.BusinessLogic
 
         internal void BallCollision(Data.IBall ball)
         {
-            List<Data.IBall> balls = layerBellow.getAllBalls();
-            foreach (var otherBall in balls)
+            lock (_collisionLock)
             {
-                if (otherBall != ball)
+                List<Data.IBall> balls = layerBellow.getAllBalls();
+                foreach (Data.IBall otherBall in balls)
                 {
-                    // Obliczanie odległości między piłkami
-                    double distance = Math.Sqrt(Math.Pow(ball.Position.X - otherBall.Position.X, 2) + Math.Pow(ball.Position.Y - otherBall.Position.Y, 2));
-
-                    // Sprawdzenie czy nastąpiła kolizja
-                    if (distance <= ball.Radius + otherBall.Radius)
+                    if (otherBall != ball)
                     {
-                        // Wektor jednostkowy w kierunku od środka pierwszej piłki do drugiej
-                        Vector2 collisionVector = Vector2.Normalize(new Vector2(
-                            (float)(otherBall.Position.X - ball.Position.X),
-                            (float)(otherBall.Position.Y - ball.Position.Y)));
-
-                        // Jeśli piłki nakładają się, odsuń je od siebie
-                        if (distance < ball.Radius + otherBall.Radius)
+                        double distance = Math.Sqrt(Math.Pow(ball.Position.X - otherBall.Position.X, 2) + Math.Pow(ball.Position.Y - otherBall.Position.Y, 2));
+                        if (distance <= ball.Radius + otherBall.Radius)
                         {
-                            float overlap = (float)(ball.Radius + otherBall.Radius - distance) / 2;
-                            // Nie zmieniamy bezpośrednio pozycji, tylko prędkości
+                            Vector2 collisionVector = Vector2.Normalize(new Vector2(
+                                (float)(otherBall.Position.X - ball.Position.X),
+                                (float)(otherBall.Position.Y - ball.Position.Y)));
+
+                            if (distance < ball.Radius + otherBall.Radius)
+                            {
+                                float overlap = (float)(ball.Radius + otherBall.Radius - distance) / 2;
+                                // Nie zmieniamy bezpośrednio pozycji, tylko prędkości
+                            }
+
+                            float v1 = Vector2.Dot(ball.Velocity, collisionVector);
+                            float v2 = Vector2.Dot(otherBall.Velocity, collisionVector);
+
+                            float m1 = 1.0f;
+                            float m2 = 1.0f;
+
+                            float newV1 = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
+                            float newV2 = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+
+                            Vector2 v1Change = collisionVector * (newV1 - v1);
+                            Vector2 v2Change = collisionVector * (newV2 - v2);
+
+                            ball.Velocity += v1Change;
+                            otherBall.Velocity += v2Change;
                         }
-
-                        // Obliczenie składowej prędkości w kierunku zderzenia
-                        float v1 = Vector2.Dot(ball.Velocity, collisionVector);
-                        float v2 = Vector2.Dot(otherBall.Velocity, collisionVector);
-
-                        // Zakładamy, że wszystkie piłki mają tę samą masę
-                        float m1 = 1.0f;
-                        float m2 = 1.0f;
-
-                        // Obliczenie nowych prędkości po zderzeniu sprężystym (wzory z wikipedii)
-                        float newV1 = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
-                        float newV2 = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
-
-                        // Obliczenie zmiany prędkości
-                        Vector2 v1Change = collisionVector * (newV1 - v1);
-                        Vector2 v2Change = collisionVector * (newV2 - v2);
-
-                        // Aktualizacja prędkości obu piłek
-                        ball.Velocity += v1Change;
-                        otherBall.Velocity += v2Change;
-
-                        //ball.Velocity *= 1.01f;
                     }
                 }
             }
         }
-
 
         public override void Dispose()
         {
@@ -111,14 +105,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         }
 
         #endregion BusinessLogicAbstractAPI
-
-        #region private
-
-        private bool Disposed = false;
-
-        private readonly UnderneathLayerAPI layerBellow;
-
-        #endregion private
 
         #region TestingInfrastructure
 
