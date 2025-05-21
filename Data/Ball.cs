@@ -8,6 +8,7 @@
 //
 //_____________________________________________________________________________________________________________________________________
 
+using System.Diagnostics;
 using System.Numerics;
 
 namespace TP.ConcurrentProgramming.Data
@@ -16,18 +17,22 @@ namespace TP.ConcurrentProgramming.Data
     {
         #region ctor
         public event EventHandler<Vector2>? NewPositionNotification;
+        private int ballId;
         private Vector2 position;
         private Vector2 velocity;
         private readonly int radius = 10;
         private readonly object positionLock = new object();
         private readonly object velocityLock = new object();
         private bool isMoving;
+        private readonly Logger logger;
 
-        internal Ball(Vector2 initialPosition)
+        internal Ball(int id, Vector2 initialPosition)
         {
             Random random = new Random();
+            ballId = id;
             position = initialPosition;
             velocity = new Vector2(random.Next(1, 7), random.Next(1, 7));
+            logger = Logger.CreateLogger();
 
         }
 
@@ -36,7 +41,19 @@ namespace TP.ConcurrentProgramming.Data
         #region IBall
 
         int IBall.Radius => radius;
-        public Vector2 Position => position;
+
+        public int BallId => ballId;
+
+        public Vector2 Position
+        {
+            get
+            {
+                lock (positionLock)
+                {
+                    return position;
+                }
+            }
+        }
         public Vector2 Velocity
         {
             get => velocity;
@@ -70,23 +87,36 @@ namespace TP.ConcurrentProgramming.Data
         private async void Move()
         {
             isMoving = true;
+
+            Stopwatch stopwatch = new();
+            stopwatch.Start();
+            float startingTime = 0f;
+
             while (isMoving)
             {
-                lock (positionLock)
+                float currentTime = stopwatch.ElapsedMilliseconds;
+                float delta = currentTime - startingTime;
+                if (delta >= 1f / 60f)
                 {
-                    //position = new Vector2(position.X + velocity.X, position.Y + velocity.Y);
-                    position += velocity * 0.5f;
+                    lock (positionLock)
+                    {
+                        //position = new Vector2(position.X + velocity.X, position.Y + velocity.Y);
+                        position += velocity * 0.5f;
+                    }
+
+                    logger.Log(this, DateTime.Now);
+                    startingTime = currentTime;
+
+                    RaiseNewPositionChangeNotification();
+
+                    //double calculatedVelocity = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
+
+                    //int delay = (int)(1000 / Math.Max(20, calculatedVelocity * 2));
+
+                    //delay = Math.Min(delay, 100);
+
+                    await Task.Delay(TimeSpan.FromSeconds(1f / 60f));
                 }
-
-                RaiseNewPositionChangeNotification();
-
-                double calculatedVelocity = Math.Sqrt(Math.Pow(velocity.X, 2) + Math.Pow(velocity.Y, 2));
-
-                int delay = (int)(1000 / Math.Max(20, calculatedVelocity * 2));
-
-                delay = Math.Min(delay, 100);
-
-                await Task.Delay(delay);
             }
         }
 

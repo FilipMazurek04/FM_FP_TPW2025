@@ -70,11 +70,8 @@ namespace TP.ConcurrentProgramming.BusinessLogic
                             float v1 = Vector2.Dot(ball.Velocity, collisionVector);
                             float v2 = Vector2.Dot(otherBall.Velocity, collisionVector);
 
-                            float m1 = 1.0f;
-                            float m2 = 1.0f;
-
-                            float newV1 = ((m1 - m2) * v1 + 2 * m2 * v2) / (m1 + m2);
-                            float newV2 = ((m2 - m1) * v2 + 2 * m1 * v1) / (m1 + m2);
+                            float newV1 = v2;
+                            float newV2 = v1;
 
                             Vector2 v1Change = collisionVector * (newV1 - v1);
                             Vector2 v2Change = collisionVector * (newV2 - v2);

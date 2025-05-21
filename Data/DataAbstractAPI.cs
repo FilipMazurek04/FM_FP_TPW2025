@@ -51,6 +51,7 @@ namespace TP.ConcurrentProgramming.Data
     {
         event EventHandler<Vector2> NewPositionNotification;
 
+        int BallId { get; }
         Vector2 Position { get; }
         Vector2 Velocity { get; set; }
         bool IsMoving { get; set; }

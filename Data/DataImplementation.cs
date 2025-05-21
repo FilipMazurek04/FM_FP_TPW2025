@@ -18,7 +18,6 @@ namespace TP.ConcurrentProgramming.Data
         #region ctor
 
         private bool Disposed = false;
-        // Pozostawiamy wymiary stołu, ale możemy je dostosować jeśli potrzeba
         private readonly int width = 400;
         private readonly int height = 400;
         private List<IBall> BallsList = [];
@@ -58,11 +57,10 @@ namespace TP.ConcurrentProgramming.Data
             for (int i = 0; i < numberOfBalls; i++)
             {
                 Vector2 startingPosition = new(random.Next(10, width - 10), random.Next(10, height - 10));
-                Ball newBall = new(startingPosition);
+                Ball newBall = new(i+1, startingPosition);
                 upperLayerHandler(startingPosition, newBall);
                 BallsList.Add(newBall);
 
-                // Uruchamiamy wątek kulki - to kluczowa linia!
                 newBall.StartThread();
             }
         }
@@ -102,10 +100,6 @@ namespace TP.ConcurrentProgramming.Data
         }
 
         #endregion IDisposable
-
-        #region private
-
-        #endregion private
 
         #region TestingInfrastructure
 
