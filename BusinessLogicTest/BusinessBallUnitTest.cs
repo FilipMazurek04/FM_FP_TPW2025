@@ -31,6 +31,8 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
 
         private class DataBallFixture : Data.IBall
         {
+            public int BallId { get; }
+
             private Vector2 _position = new Vector2(100.0f, 150.0f);
             private Vector2 _velocity = new Vector2(5.0f, 3.0f);
 
@@ -41,7 +43,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 set => _velocity = value;
             }
             public bool IsMoving { get; set; } = true;
-            public int Radius => 10;
 
             public event EventHandler<Vector2>? NewPositionNotification;
 

@@ -134,7 +134,6 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 var ball1 = new TestBall
                 {
                     Position = new Vector2(5, 50),
-                    Radius = 10,
                     Velocity = new Vector2(-2, 1)
                 };
                 Vector2 initialVelocity1 = ball1.Velocity;
@@ -150,7 +149,7 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 var ball2 = new TestBall
                 {
                     Position = new Vector2(50, 5),
-                    Radius = 10,
+                    
                     Velocity = new Vector2(1, -2)
                 };
                 Vector2 initialVelocity2 = ball2.Velocity;
@@ -176,14 +175,14 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 var ball1 = new TestBall
                 {
                     Position = new Vector2(50, 50),
-                    Radius = 10,
+                    
                     Velocity = new Vector2(2, 0)
                 };
 
                 var ball2 = new TestBall
                 {
                     Position = new Vector2(69, 50), // Odległość = 19 < suma promieni (20)
-                    Radius = 10,
+                    
                     Velocity = new Vector2(-1, 0)
                 };
 
@@ -220,14 +219,14 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 var ball1 = new TestBall
                 {
                     Position = new Vector2(50, 50),
-                    Radius = 10,
+                    
                     Velocity = new Vector2(2, 0)
                 };
 
                 var ball2 = new TestBall
                 {
                     Position = new Vector2(100, 50), // Odległość = 50 > suma promieni (20)
-                    Radius = 10,
+                    
                     Velocity = new Vector2(-1, 0)
                 };
 
@@ -261,14 +260,14 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
                 var ball1 = new TestBall
                 {
                     Position = new Vector2(50, 50),
-                    Radius = 10,
+                    
                     Velocity = new Vector2(2, 1)
                 };
 
                 var ball2 = new TestBall
                 {
                     Position = new Vector2(65, 60), // Kolizja pod kątem
-                    Radius = 10,
+                    
                     Velocity = new Vector2(-1, -2)
                 };
 
@@ -355,12 +354,13 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
 
             private class DataBallFixture : Data.IBall
             {
+                public int BallId => BallId;
+
                 private Vector2 _position = new Vector2(0, 0);
 
                 public Vector2 Position => _position;
                 public Vector2 Velocity { get; set; } = new Vector2(0, 0);
                 public bool IsMoving { get; set; } = true;
-                public int Radius => 10;
 
                 public event EventHandler<Vector2>? NewPositionNotification;
 
@@ -399,14 +399,14 @@ namespace TP.ConcurrentProgramming.BusinessLogic.Test
         {
             public Vector2 Position { get; set; }
             public Vector2 Velocity { get; set; }
-            public int Radius { get; set; }
             public bool IsMoving { get; set; } = true;
+            public int BallId { get; } 
 
             public event EventHandler<Vector2>? NewPositionNotification;
 
             public void StartThread() { }
 
-            // Metoda pomocnicza do symulacji zmiany pozycji
+            // Metoda pomocnicza do symulacji zmiany pozycji  
             public void SimulatePositionChange(Vector2 newPosition)
             {
                 Position = newPosition;

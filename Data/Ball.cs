@@ -20,7 +20,6 @@ namespace TP.ConcurrentProgramming.Data
         private int ballId;
         private Vector2 position;
         private Vector2 velocity;
-        private readonly int radius = 10;
         private readonly object positionLock = new object();
         private readonly object velocityLock = new object();
         private bool isMoving;
@@ -39,8 +38,6 @@ namespace TP.ConcurrentProgramming.Data
         #endregion ctor
 
         #region IBall
-
-        int IBall.Radius => radius;
 
         public int BallId => ballId;
 

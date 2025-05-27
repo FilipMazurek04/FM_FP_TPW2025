@@ -23,7 +23,7 @@ namespace TP.ConcurrentProgramming.Data.Test
         {
             // Utworzenie nowej piłki z pozycją początkową
             Vector2 initialPosition = new Vector2(100f, 100f);
-            Ball ball = new Ball(initialPosition);
+            Ball ball = new Ball(1, initialPosition);
 
             // Sprawdzenie, czy wartości początkowe są ustawione
             Assert.AreEqual(initialPosition, ball.Position);

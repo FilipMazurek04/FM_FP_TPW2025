@@ -38,10 +38,12 @@ namespace TP.ConcurrentProgramming.BusinessLogic
         {
             double tableWidth = layerBellow.getWidth();
             double tableHeight = layerBellow.getHeight();
+            
+            // 10 - promień piłki
 
-            if (ball.Position.X - ball.Radius <= 0 || ball.Position.X + ball.Radius >= tableWidth)
+            if (ball.Position.X - 10 <= 0 || ball.Position.X + 10 >= tableWidth)
                 ball.Velocity = new Vector2(-ball.Velocity.X, ball.Velocity.Y);
-            if (ball.Position.Y - ball.Radius <= 0 || ball.Position.Y + ball.Radius >= tableHeight)
+            if (ball.Position.Y - 10 <= 0 || ball.Position.Y + 10 >= tableHeight)
                 ball.Velocity = new Vector2(ball.Velocity.X, -ball.Velocity.Y);
         }
 
@@ -55,15 +57,15 @@ namespace TP.ConcurrentProgramming.BusinessLogic
                     if (otherBall != ball)
                     {
                         double distance = Math.Sqrt(Math.Pow(ball.Position.X - otherBall.Position.X, 2) + Math.Pow(ball.Position.Y - otherBall.Position.Y, 2));
-                        if (distance <= ball.Radius + otherBall.Radius)
+                        if (distance <= 10 + 10)
                         {
                             Vector2 collisionVector = Vector2.Normalize(new Vector2(
                                 (float)(otherBall.Position.X - ball.Position.X),
                                 (float)(otherBall.Position.Y - ball.Position.Y)));
 
-                            if (distance < ball.Radius + otherBall.Radius)
+                            if (distance < 10 + 10)
                             {
-                                float overlap = (float)(ball.Radius + otherBall.Radius - distance) / 2;
+                                float overlap = (float)(10 + 10 - distance) / 2;
                                 // Nie zmieniamy bezpośrednio pozycji, tylko prędkości
                             }
 

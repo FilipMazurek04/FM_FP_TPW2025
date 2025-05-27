@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Numerics;
-using System.Text;
+using Newtonsoft.Json;
 
 namespace TP.ConcurrentProgramming.Data
 {
-    internal class Logger
+    internal class Logger : IDisposable
     {
         private class BallToLog
         {
@@ -23,68 +22,84 @@ namespace TP.ConcurrentProgramming.Data
             }
         }
 
-        private readonly BlockingCollection<BallToLog> _queue;
         private readonly string _logFilePath;
-        private readonly int _cacheSize = 100;
-        private bool _isOverCacheSize = false;
+        private readonly ConcurrentQueue<BallToLog> _queue = new();
+        private readonly ManualResetEvent _stopEvent = new(false);
+        private readonly Thread _loggerThread;
+        private bool _isDisposed = false;
         private static Logger? logger;
+        private static readonly object _singletonLock = new();
 
-        private static readonly object _singletonLock = new object();
-        private readonly object _lock = new object();
-
-        internal Logger()
+        public Logger()
         {
-            _queue = new BlockingCollection<BallToLog>(new ConcurrentQueue<BallToLog>(), _cacheSize);
-            string PathToSave = Path.GetTempPath(); // zapisujemy w \AppData\Local\Temp\log.json
-            _logFilePath = Path.Combine(PathToSave, "log.json");
-            WriteToFile();
+            string pathToSave = Path.GetTempPath(); // tutaj \AppData\Local\Temp
+            _logFilePath = Path.Combine(pathToSave, $"TPW_{DateTime.Now:yyyy_MM_dd_HH_mm_ss_fff}.json");
+            File.WriteAllText(_logFilePath, $"Logger start: {DateTime.Now}\n");
+
+            _loggerThread = new Thread(ProcessLogQueue)
+            {
+                IsBackground = true,
+                Name = "LoggerThread"
+            };
+            _loggerThread.Start();
         }
 
         public static Logger CreateLogger()
         {
             lock (_singletonLock)
             {
-                if (logger != null) return logger;
-
-                logger = new Logger();
+                if (logger == null)
+                    logger = new Logger();
                 return logger;
             }
         }
+
         public void Log(IBall ball, DateTime date)
         {
-            bool isAdded = _queue.TryAdd(new BallToLog(ball.BallId, ball.Position, ball.Velocity, date));
-            if (isAdded) return;
-            lock (_lock)
+            if (_isDisposed) return;
+            _queue.Enqueue(new BallToLog(ball.BallId, ball.Position, ball.Velocity, date));
+        }
+
+        private void ProcessLogQueue()
+        {
+            while (!_stopEvent.WaitOne(100)) // co 100ms sprawdza czy są nowe wpisy w kolejce
             {
-                _isOverCacheSize = true;
+                while (_queue.TryDequeue(out BallToLog entry))
+                {
+                    try
+                    {
+                        string jsonString = JsonConvert.SerializeObject(entry);
+                        File.AppendAllText(_logFilePath, jsonString + Environment.NewLine);
+                    }
+                    catch (Exception ex)
+                    {
+                        File.AppendAllText(_logFilePath + ".error.json", $"{DateTime.Now}: Error writing log: {ex.Message}\n");
+                    }
+                }
+            }
+            // Zapisuje pozostałe wpisy przed zakończeniem
+            while (_queue.TryDequeue(out BallToLog entry))
+            {
+                try
+                {
+                    string jsonString = JsonConvert.SerializeObject(entry);
+                    File.AppendAllText(_logFilePath, jsonString + Environment.NewLine);
+                }
+                catch { }
             }
         }
 
-        private void WriteToFile()
+        public void Dispose()
         {
-            Task.Run(async () =>
+            if (_isDisposed) return;
+            _isDisposed = true;
+            _stopEvent.Set();
+            if (!_loggerThread.Join(1000))
             {
-                using StreamWriter _streamWriter = new StreamWriter(_logFilePath, false, Encoding.UTF8);
-                while (!_queue.IsCompleted)
-                {
-                    bool isOverflow = false;
-                    lock (_lock)
-                    {
-                        if (_isOverCacheSize)
-                        {
-                            isOverflow = true;
-                            _isOverCacheSize = false;
-                        }
-                    }
-
-                    if (isOverflow) await _streamWriter.WriteLineAsync("Cache is over size.");
-
-                    BallToLog ball = _queue.Take();
-                    string jsonString = JsonConvert.SerializeObject(ball);
-                    await _streamWriter.WriteLineAsync(jsonString);
-                    await _streamWriter.FlushAsync();
-                }
-            });
+                try { _loggerThread.Interrupt(); }
+                catch { }
+            }
+            _stopEvent.Dispose();
         }
     }
 }
